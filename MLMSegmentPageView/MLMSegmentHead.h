@@ -98,6 +98,10 @@ typedef enum : NSUInteger {
  *  字体的大小，完全自定义样式下可不设置
  */
 @property (nonatomic, assign) CGFloat fontSize;
+
+@property (nonatomic, strong) UIFont *selectFont;
+
+@property (nonatomic, strong) UIFont *deSelectFont;
 /**
  *  选中状态的缩放比例，SegmentHeadStyleSlide风格下此属性无用,设置缩放比例滑动过程中会有相应动画
  */

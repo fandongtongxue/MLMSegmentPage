@@ -185,8 +185,13 @@ static CGFloat animation_time = .3;
 }
 
 - (CGFloat)titleWidth:(NSString *)title {
-    CGFloat sys_font = _fontScale>1?_fontSize*_fontScale:_fontSize;
-    return [title boundingRectWithSize:CGSizeMake(MAXFLOAT, CGRectGetHeight(self.frame)) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName : [UIFont systemFontOfSize:sys_font]} context:nil].size.width + _singleW_Add;
+    if (!self.selectFont) {
+        CGFloat sys_font = _fontScale>1?_fontSize*_fontScale:_fontSize;
+        return [title boundingRectWithSize:CGSizeMake(MAXFLOAT, CGRectGetHeight(self.frame)) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName : [UIFont systemFontOfSize:sys_font]} context:nil].size.width + _singleW_Add;
+    }else{
+        UIFont *sys_font = _fontScale==1?_selectFont:_deSelectFont;
+        return [title boundingRectWithSize:CGSizeMake(MAXFLOAT, CGRectGetHeight(self.frame)) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName : sys_font} context:nil].size.width + _singleW_Add;
+    }
 }
 
 //#pragma mark - 添加按钮
@@ -320,8 +325,12 @@ static CGFloat animation_time = .3;
     
     if (titles && _headStyle != SegmentHeadStyleSlide) {
         UIButton *curBtn = buttonArray[_showIndex];
-        if (_fontScale != 1) {
-            curBtn.titleLabel.font = [UIFont systemFontOfSize:_fontSize*_fontScale];
+        if (!_selectFont) {
+            if (_fontScale != 1) {
+                curBtn.titleLabel.font = [UIFont systemFontOfSize:_fontSize*_fontScale];
+            }
+        }else{
+            curBtn.titleLabel.font = _selectFont;
         }
         [curBtn setTintColor:_selectColor];
     }
@@ -335,7 +344,11 @@ static CGFloat animation_time = .3;
         width = CURRENT_WIDTH(i);
         UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
         [button setTitle:titlesArr[i] forState:UIControlStateNormal];
-        button.titleLabel.font = [UIFont systemFontOfSize:_fontSize];
+        if (!_selectFont) {
+            button.titleLabel.font = [UIFont systemFontOfSize:_fontSize];
+        }else{
+            button.titleLabel.font = _deSelectFont;
+        }
         button.frame = CGRectMake(start_x, 0, width, SCROLL_HEIGHT);
         start_x += width;
         if (titles) {
@@ -378,10 +391,12 @@ static CGFloat animation_time = .3;
     
     CGFloat line_w = CURRENT_WIDTH(currentIndex);
     
-    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, SCROLL_HEIGHT-_lineHeight, line_w*_lineScale, _lineHeight)];
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, SCROLL_HEIGHT-_lineHeight - 5, line_w*_lineScale, _lineHeight)];
     UIButton *current_btn = buttonArray[currentIndex];
     line.center = CGPointMake(current_btn.center.x, line.center.y);
     line.backgroundColor = _lineColor;
+    line.layer.cornerRadius = _lineHeight / 2;
+    line.clipsToBounds = YES;
     return line;
 }
 
@@ -496,9 +511,14 @@ static CGFloat animation_time = .3;
         [select_btn setTintColor:_selectColor];
     }
     
-    if (_fontScale) {
-        before_btn.titleLabel.font = [UIFont systemFontOfSize:_fontSize];
-        select_btn.titleLabel.font = [UIFont systemFontOfSize:_fontSize*_fontScale];
+    if (!_selectFont) {
+        if (_fontScale) {
+            before_btn.titleLabel.font = [UIFont systemFontOfSize:_fontSize];
+            select_btn.titleLabel.font = [UIFont systemFontOfSize:_fontSize*_fontScale];
+        }
+    }else{
+        before_btn.titleLabel.font = _deSelectFont;
+        select_btn.titleLabel.font = _selectFont;
     }
     
     if (lineView) {
@@ -632,13 +652,18 @@ static CGFloat animation_time = .3;
 
 #pragma mark - 字体大小变化
 - (void)fontChangeCurBtn:(UIButton *)curBtn nextBtn:(UIButton *)nextBtn changeScale:(CGFloat)changeScale{
-    //button字体改变的大小
-    CGFloat btn_font_change = _fontSize*(_fontScale - 1);
-    //大小变化
-    CGFloat next_font = _fontSize + changeScale*btn_font_change;
-    CGFloat cur_font = _fontSize*_fontScale - changeScale*btn_font_change;
-    nextBtn.titleLabel.font = [UIFont systemFontOfSize:next_font];
-    curBtn.titleLabel.font = [UIFont systemFontOfSize:cur_font];
+    if (!_selectFont) {
+        //button字体改变的大小
+        CGFloat btn_font_change = _fontSize*(_fontScale - 1);
+        //大小变化
+        CGFloat next_font = _fontSize + changeScale*btn_font_change;
+        CGFloat cur_font = _fontSize*_fontScale - changeScale*btn_font_change;
+        nextBtn.titleLabel.font = [UIFont systemFontOfSize:next_font];
+        curBtn.titleLabel.font = [UIFont systemFontOfSize:cur_font];
+    }else{
+        nextBtn.titleLabel.font = _deSelectFont;
+        curBtn.titleLabel.font = _selectFont;
+    }
 }
 
 #pragma mark - 颜色变化
